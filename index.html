@@ -3,122 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor ESPN+ | Live Stream</title>
+    <title>Reproductor Autoplay | ESPN+</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #0b0b0b;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-        }
-
-        .player-card {
-            width: 95%;
-            max-width: 1000px;
-            background: #1a1a1a;
-            border-radius: 15px;
+            align-items: center;
+            height: 100vh;
             overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            border: 1px solid #333;
         }
-
+        .video-container {
+            width: 100%;
+            max-width: 1000px;
+        }
         video {
             width: 100%;
             aspect-ratio: 16 / 9;
-            display: block;
-            background: #000;
-        }
-
-        .header {
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(90deg, #1a1a1a, #252525);
-        }
-
-        .live-indicator {
-            background: #ff0000;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 12px;
-            text-transform: uppercase;
-            animation: blink 1.5s infinite;
-        }
-
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: #efefef;
+            box-shadow: 0 0 20px rgba(255,0,0,0.2);
         }
     </style>
 </head>
 <body>
 
-    <div class="player-card">
-        <div class="header">
-            <h1>Transmisión en Vivo</h1>
-            <span class="live-indicator">EN VIVO</span>
-        </div>
-        
-        <video id="video" controls autoplay playsinline></video>
+    <div class="video-container">
+        <video id="video" controls autoplay muted playsinline></video>
     </div>
 
     <script>
         const video = document.getElementById('video');
-        // Nuevo enlace proporcionado
         const videoSrc = 'https://ng0pr.envivoslatam.org/espnplus1/tracks-v1a1/mono.m3u8?ip=181.174.104.54&token=6876c12cbff5d672cab2ce55834bd564efc39684-41-1772612345-1772558345';
 
         if (Hls.isSupported()) {
-            const hls = new Hls({
-                manifestLoadingMaxRetry: 4,
-                levelLoadingMaxRetry: 4
-            });
-            
+            const hls = new Hls();
             hls.loadSource(videoSrc);
             hls.attachMedia(video);
-            
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play().catch(e => console.log("Autoplay bloqueado, haz clic en play."));
+                // Forzamos el play una vez detectado el video
+                video.play();
             });
-
-            // Recuperación automática de errores
-            hls.on(Hls.Events.ERROR, function (event, data) {
-                if (data.fatal) {
-                    switch (data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.log("Error de red detectado. Intentando reconectar...");
-                            hls.startLoad();
-                            break;
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.log("Error de media. Intentando recuperar...");
-                            hls.recoverMediaError();
-                            break;
-                        default:
-                            console.error("Error fatal irrecuperable.");
-                            hls.destroy();
-                            break;
-                    }
-                }
-            });
-
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Soporte nativo para Safari (iOS/Mac)
+        } 
+        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = videoSrc;
             video.addEventListener('loadedmetadata', function() {
                 video.play();
