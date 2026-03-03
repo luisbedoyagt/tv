@@ -3,62 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor America TV</title>
+    <title>Reproductor HLS - GitHub Pages</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #000;
+            background-color: #121212;
+            color: #eee;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
-            font-family: sans-serif;
+            justify-content: center;
+            min-height: 100vh;
         }
-        .container {
-            width: 80%;
-            max-width: 800px;
+
+        .video-container {
+            width: 90%;
+            max-width: 900px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+
         video {
             width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: block;
+            aspect-ratio: 16 / 9;
         }
-        h2 {
-            color: white;
+
+        .info {
+            margin-top: 20px;
             text-align: center;
-            font-size: 1.2rem;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #2e7d32;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Reproductor en Vivo</h2>
-    <video id="video" controls autoplay playsinline></video>
-</div>
+    <div class="video-container">
+        <video id="video" controls autoplay playsinline poster="https://via.placeholder.com/1920x1080/000000/FFFFFF?text=Cargando+Stream..."></video>
+    </div>
 
-<script>
-    var video = document.getElementById('video');
-    var videoSrc = 'https://agvyby.fubohd.com/americatv/mono.m3u8?token=bf046d800f6e96c1774a73aebc9309fb2b189ee1-a1-1772583762-1772565762';
+    <div class="info">
+        <span class="status-tag">En Directo</span>
+        <h1>Reproductor de Video</h1>
+        <p>Transmitiendo vía HLS (.m3u8)</p>
+    </div>
 
-    if (Hls.isSupported()) {
-        var hls = new Hls();
-        hls.loadSource(videoSrc);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            video.play();
-        });
-    }
-    // Soporte nativo para Safari (iOS/Mac)
-    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoSrc;
-        video.addEventListener('loadedmetadata', function() {
-            video.play();
-        });
-    }
-</script>
+    <script>
+        const video = document.getElementById('video');
+        // Tu enlace con token
+        const videoSrc = 'https://agvyby.fubohd.com/americatv/mono.m3u8?token=bf046d800f6e96c1774a73aebc9309fb2b189ee1-a1-1772583762-1772565762';
+
+        if (Hls.isSupported()) {
+            const hls = new Hls({
+                debug: false,
+                enableWorker: true
+            });
+            hls.loadSource(videoSrc);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                video.play().catch(() => {
+                    console.log("El navegador bloqueó el autoplay. Se requiere interacción del usuario.");
+                });
+            });
+
+            // Manejo de errores básicos
+            hls.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.error("Error de red: El token podría haber expirado.");
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.error("Error de medios: Intentando recuperar...");
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            hls.destroy();
+                            break;
+                    }
+                }
+            });
+
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // Soporte nativo para Safari y navegadores de iOS
+            video.src = videoSrc;
+            video.addEventListener('loadedmetadata', function() {
+                video.play();
+            });
+        }
+    </script>
 
 </body>
 </html>
