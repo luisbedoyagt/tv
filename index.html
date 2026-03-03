@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor HLS - GitHub Pages</title>
+    <title>Reproductor ESPN+ | Live Stream</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #121212;
-            color: #eee;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0b0b0b;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -19,80 +19,98 @@
             min-height: 100vh;
         }
 
-        .video-container {
-            width: 90%;
-            max-width: 900px;
-            background: #000;
-            border-radius: 12px;
+        .player-card {
+            width: 95%;
+            max-width: 1000px;
+            background: #1a1a1a;
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 1px solid #333;
         }
 
         video {
             width: 100%;
-            display: block;
             aspect-ratio: 16 / 9;
+            display: block;
+            background: #000;
         }
 
-        .info {
-            margin-top: 20px;
-            text-align: center;
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(90deg, #1a1a1a, #252525);
         }
 
-        .status-tag {
-            display: inline-block;
-            padding: 4px 12px;
-            background: #2e7d32;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .live-indicator {
+            background: #ff0000;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
             font-weight: bold;
+            font-size: 12px;
             text-transform: uppercase;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #efefef;
         }
     </style>
 </head>
 <body>
 
-    <div class="video-container">
-        <video id="video" controls autoplay playsinline poster="https://via.placeholder.com/1920x1080/000000/FFFFFF?text=Cargando+Stream..."></video>
-    </div>
-
-    <div class="info">
-        <span class="status-tag">En Directo</span>
-        <h1>Reproductor de Video</h1>
-        <p>Transmitiendo vía HLS (.m3u8)</p>
+    <div class="player-card">
+        <div class="header">
+            <h1>Transmisión en Vivo</h1>
+            <span class="live-indicator">EN VIVO</span>
+        </div>
+        
+        <video id="video" controls autoplay playsinline></video>
     </div>
 
     <script>
         const video = document.getElementById('video');
-        // Tu enlace con token
-        const videoSrc = 'https://agvyby.fubohd.com/americatv/mono.m3u8?token=bf046d800f6e96c1774a73aebc9309fb2b189ee1-a1-1772583762-1772565762';
+        // Nuevo enlace proporcionado
+        const videoSrc = 'https://ng0pr.envivoslatam.org/espnplus1/tracks-v1a1/mono.m3u8?ip=181.174.104.54&token=6876c12cbff5d672cab2ce55834bd564efc39684-41-1772612345-1772558345';
 
         if (Hls.isSupported()) {
             const hls = new Hls({
-                debug: false,
-                enableWorker: true
+                manifestLoadingMaxRetry: 4,
+                levelLoadingMaxRetry: 4
             });
+            
             hls.loadSource(videoSrc);
             hls.attachMedia(video);
+            
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play().catch(() => {
-                    console.log("El navegador bloqueó el autoplay. Se requiere interacción del usuario.");
-                });
+                video.play().catch(e => console.log("Autoplay bloqueado, haz clic en play."));
             });
 
-            // Manejo de errores básicos
+            // Recuperación automática de errores
             hls.on(Hls.Events.ERROR, function (event, data) {
                 if (data.fatal) {
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.error("Error de red: El token podría haber expirado.");
+                            console.log("Error de red detectado. Intentando reconectar...");
                             hls.startLoad();
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.error("Error de medios: Intentando recuperar...");
+                            console.log("Error de media. Intentando recuperar...");
                             hls.recoverMediaError();
                             break;
                         default:
+                            console.error("Error fatal irrecuperable.");
                             hls.destroy();
                             break;
                     }
@@ -100,7 +118,7 @@
             });
 
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Soporte nativo para Safari y navegadores de iOS
+            // Soporte nativo para Safari (iOS/Mac)
             video.src = videoSrc;
             video.addEventListener('loadedmetadata', function() {
                 video.play();
