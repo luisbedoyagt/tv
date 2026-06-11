@@ -3,98 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor VIP | ESPN+</title>
+    <title>Canal 5 MX</title>
+
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
     <style>
         body {
             margin: 0;
-            padding: 0;
-            background-color: #000;
+            background: #000;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            font-family: sans-serif;
             overflow: hidden;
         }
-        .container {
-            position: relative;
-            width: 100%;
-            max-width: 960px;
-        }
+
         video {
             width: 100%;
-            aspect-ratio: 16 / 9;
+            height: 100%;
+            object-fit: contain;
             background: #000;
-            cursor: pointer;
         }
-        /* Botón de Sonido Flotante */
-        #unmute-btn {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 15px 30px;
-            background: rgba(255, 0, 0, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 10;
-            box-shadow: 0 0 20px rgba(255,0,0,0.5);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #unmute-btn:hover { background: #cc0000; }
-        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <button id="unmute-btn">
-            <span>🔊 ACTIVAR SONIDO AL 100%</span>
-        </button>
-        
-        <video id="video" controls autoplay muted playsinline></video>
-    </div>
+<video id="video" controls autoplay></video>
 
-    <script>
-        const video = document.getElementById('video');
-        const btn = document.getElementById('unmute-btn');
-        const videoSrc = 'https://chsuz.vivolatamz.org/canal5mx/tracks-v1a1/mono.m3u8?ip=181.174.104.124&token=4e0d88d749423ea0abc08ed73dc0242f06a531f9-5f-1781247155-1781193155';
+<script>
+const video = document.getElementById('video');
 
-        // Configuración de HLS
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(videoSrc);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                video.play();
-            });
-        } 
-        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = videoSrc;
-            video.addEventListener('loadedmetadata', () => {
-                video.play();
-            });
-        }
+const videoSrc = 'https://chsuz.vivolatamz.org/canal5mx/tracks-v1a1/mono.m3u8?ip=181.174.104.124&token=4e0d88d749423ea0abc08ed73dc0242f06a531f9-5f-1781247155-1781193155';
 
-        // Función para activar sonido al máximo con un clic
-        btn.addEventListener('click', () => {
-            video.muted = false;   // Quita el silencio
-            video.volume = 1.0;    // Volumen al 100% (1.0 es el máximo)
-            btn.classList.add('hidden'); // Oculta el botón
-        });
+if (Hls.isSupported()) {
+    const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true
+    });
 
-        // Por si el usuario usa los controles nativos
-        video.onvolumechange = () => {
-            if (!video.muted) btn.classList.add('hidden');
-        };
-    </script>
+    hls.loadSource(videoSrc);
+    hls.attachMedia(video);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        video.play().catch(() => {});
+    });
+
+} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = videoSrc;
+    video.addEventListener('loadedmetadata', function () {
+        video.play().catch(() => {});
+    });
+}
+</script>
 
 </body>
 </html>
